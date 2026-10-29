@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 610" width="900" height="610" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2b6cb0"/></marker>
+    <marker id="lj" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c05621"/></marker>
+  </defs>
+  <rect width="900" height="610" fill="#ffffff"/>
+  <text x="450" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a202c">Prefixo de todos os tópicos: catolica/iot/n3-raig/sala/</text>
+
+  <!-- ESP32 -->
+  <rect x="20" y="45" width="200" height="410" rx="10" fill="#ebf4ff" stroke="#1a365d" stroke-width="2"/>
+  <text x="120" y="72" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a365d">ESP32</text>
+  <text x="120" y="90" text-anchor="middle" font-size="11" fill="#4a5568">Dispositivo · MQTT TCP 1883</text>
+  <rect x="32" y="110" width="176" height="46" rx="6" fill="#fff" stroke="#90a4c0"/>
+  <text x="120" y="129" text-anchor="middle" font-size="13" font-weight="bold">Sensor DHT11</text>
+  <text x="120" y="146" text-anchor="middle" font-size="11" fill="#4a5568">GPIO 4 · lê a cada 5 s</text>
+  <text x="120" y="208" text-anchor="middle" font-size="11" fill="#2d3748">Muda o LED e só depois</text>
+  <text x="120" y="223" text-anchor="middle" font-size="11" fill="#2d3748">confirma o estado em ③</text>
+  <text x="120" y="283" text-anchor="middle" font-size="11" fill="#2d3748">Reconecta sozinho a cada 5 s</text>
+  <text x="120" y="298" text-anchor="middle" font-size="11" fill="#2d3748">(Wi-Fi e broker) e, ao voltar,</text>
+  <text x="120" y="313" text-anchor="middle" font-size="11" fill="#2d3748">republica ③ e ④</text>
+  <rect x="32" y="370" width="176" height="46" rx="6" fill="#fff" stroke="#90a4c0"/>
+  <text x="120" y="389" text-anchor="middle" font-size="13" font-weight="bold">LED "ventilador"</text>
+  <text x="120" y="406" text-anchor="middle" font-size="11" fill="#4a5568">GPIO 2 · atuador</text>
+
+  <!-- Broker -->
+  <rect x="360" y="45" width="180" height="410" rx="10" fill="#fff5eb" stroke="#c05621" stroke-width="2"/>
+  <text x="450" y="72" text-anchor="middle" font-size="19" font-weight="bold" fill="#9c4221">Broker MQTT</text>
+  <text x="450" y="90" text-anchor="middle" font-size="11" fill="#4a5568">HiveMQ público</text>
+  <text x="450" y="104" text-anchor="middle" font-size="11" fill="#4a5568">broker.hivemq.com</text>
+  <text x="450" y="200" text-anchor="middle" font-size="12" fill="#2d3748">Repassa cada mensagem</text>
+  <text x="450" y="216" text-anchor="middle" font-size="12" fill="#2d3748">a quem assinou o tópico</text>
+  <text x="450" y="256" text-anchor="middle" font-size="11" fill="#4a5568">Guarda a última mensagem</text>
+  <text x="450" y="270" text-anchor="middle" font-size="11" fill="#4a5568">de ③ e ④ (retain)</text>
+  <text x="450" y="305" text-anchor="middle" font-size="11" fill="#4a5568">Publica "offline" em ④ se</text>
+  <text x="450" y="319" text-anchor="middle" font-size="11" fill="#4a5568">o ESP32 sumir sem avisar</text>
+  <text x="450" y="333" text-anchor="middle" font-size="11" fill="#4a5568">(LWT, em até ~22 s)</text>
+
+  <!-- Dashboard -->
+  <rect x="680" y="45" width="200" height="410" rx="10" fill="#ebf4ff" stroke="#1a365d" stroke-width="2"/>
+  <text x="780" y="72" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a365d">Dashboard</text>
+  <text x="780" y="90" text-anchor="middle" font-size="11" fill="#4a5568">Navegador · WebSocket seguro 8884</text>
+  <rect x="692" y="110" width="176" height="46" rx="6" fill="#fff" stroke="#90a4c0"/>
+  <text x="780" y="129" text-anchor="middle" font-size="13" font-weight="bold">Temperatura: 26,4 °C</text>
+  <text x="780" y="146" text-anchor="middle" font-size="11" fill="#4a5568">"ACIMA DO LIMITE" se &gt; 28 °C</text>
+  <rect x="692" y="190" width="176" height="40" rx="6" fill="#fff" stroke="#90a4c0"/>
+  <text x="780" y="215" text-anchor="middle" font-size="13" font-weight="bold">Ventilador: LIGADO</text>
+  <rect x="692" y="270" width="176" height="40" rx="6" fill="#fff" stroke="#90a4c0"/>
+  <text x="780" y="295" text-anchor="middle" font-size="13" font-weight="bold">Dispositivo: online</text>
+  <rect x="692" y="370" width="176" height="46" rx="6" fill="#fff" stroke="#90a4c0"/>
+  <text x="780" y="389" text-anchor="middle" font-size="13" font-weight="bold">[ Ligar ]  [ Desligar ]</text>
+  <text x="780" y="406" text-anchor="middle" font-size="11" fill="#4a5568">botões de comando</text>
+  <text x="780" y="436" text-anchor="middle" font-size="11" fill="#4a5568">Broker: conectado</text>
+  <text x="780" y="449" text-anchor="middle" font-size="10" fill="#718096">(conexão do navegador, sem tópico)</text>
+
+  <!-- ① temperatura -->
+  <line x1="220" y1="133" x2="358" y2="133" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="290" y="124" text-anchor="middle" font-size="11" font-weight="bold" fill="#2b6cb0">① temperatura</text>
+  <text x="290" y="148" text-anchor="middle" font-size="10" fill="#4a5568">"26.4" · QoS 0</text>
+  <line x1="540" y1="133" x2="678" y2="133" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="610" y="124" text-anchor="middle" font-size="11" font-weight="bold" fill="#2b6cb0">① temperatura</text>
+
+  <!-- ③ estado -->
+  <line x1="220" y1="210" x2="358" y2="210" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="290" y="201" text-anchor="middle" font-size="11" font-weight="bold" fill="#2b6cb0">③ ventilador/estado</text>
+  <text x="290" y="225" text-anchor="middle" font-size="10" fill="#4a5568">LIGADO | DESLIGADO</text>
+  <text x="290" y="238" text-anchor="middle" font-size="10" fill="#4a5568">QoS 0 · retain</text>
+  <line x1="540" y1="210" x2="678" y2="210" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="610" y="201" text-anchor="middle" font-size="11" font-weight="bold" fill="#2b6cb0">③ ventilador/estado</text>
+
+  <!-- ④ status -->
+  <line x1="220" y1="290" x2="358" y2="290" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="290" y="281" text-anchor="middle" font-size="11" font-weight="bold" fill="#2b6cb0">④ status</text>
+  <text x="290" y="305" text-anchor="middle" font-size="10" fill="#4a5568">online · QoS 0 · retain</text>
+  <text x="290" y="318" text-anchor="middle" font-size="10" fill="#4a5568">LWT: offline</text>
+  <text x="290" y="331" text-anchor="middle" font-size="10" fill="#4a5568">QoS 1 · retain</text>
+  <line x1="540" y1="290" x2="678" y2="290" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="610" y="281" text-anchor="middle" font-size="11" font-weight="bold" fill="#2b6cb0">④ status</text>
+  <text x="610" y="305" text-anchor="middle" font-size="10" fill="#4a5568">online | offline</text>
+
+  <!-- ② comando -->
+  <line x1="678" y1="393" x2="542" y2="393" stroke="#c05621" stroke-width="3" stroke-dasharray="8,5" marker-end="url(#lj)"/>
+  <text x="610" y="384" text-anchor="middle" font-size="11" font-weight="bold" fill="#c05621">② ventilador/comando</text>
+  <text x="610" y="408" text-anchor="middle" font-size="10" fill="#4a5568">ON | OFF</text>
+  <text x="610" y="421" text-anchor="middle" font-size="10" fill="#4a5568">QoS 1 · sem retain</text>
+  <line x1="358" y1="393" x2="222" y2="393" stroke="#c05621" stroke-width="3" stroke-dasharray="8,5" marker-end="url(#lj)"/>
+  <text x="290" y="384" text-anchor="middle" font-size="11" font-weight="bold" fill="#c05621">② ventilador/comando</text>
+  <text x="290" y="408" text-anchor="middle" font-size="10" fill="#4a5568">assinado com QoS 1</text>
+
+  <!-- legenda -->
+  <rect x="20" y="472" width="860" height="62" rx="6" fill="#f7fafc" stroke="#cbd5e0"/>
+  <line x1="35" y1="492" x2="80" y2="492" stroke="#2b6cb0" stroke-width="3" marker-end="url(#az)"/>
+  <text x="92" y="496" font-size="12" fill="#1a202c">Ida: o dispositivo publica e o dashboard assina ① temperatura, ③ ventilador/estado e ④ status</text>
+  <line x1="35" y1="516" x2="80" y2="516" stroke="#c05621" stroke-width="3" stroke-dasharray="8,5" marker-end="url(#lj)"/>
+  <text x="92" y="520" font-size="12" fill="#1a202c">Volta: o dashboard publica e o dispositivo assina ② ventilador/comando. Um comando segue ② → LED muda → ③</text>
+  <text x="20" y="562" font-size="12" fill="#4a5568">Os números dão a ordem de um ciclo: a leitura ① chega ao dashboard; o clique gera ②; o ESP32 muda o LED e confirma em ③;</text>
+  <text x="20" y="579" font-size="12" fill="#4a5568">④ diz se o dispositivo está conectado. O dashboard só mostra LIGADO depois de receber ③, nunca no clique.</text>
+</svg>
