@@ -52,7 +52,7 @@ vocês precisam já foi visto nas aulas" (orientação, virou D4/D5) e "Um ritmo
 |---|---|---|---|---|
 | D1 | Repositório público `igorSeberino/iot.sala` + Project `@sala`; commits direto na `main`, cada um na sua pasta, sem PR obrigatório | Igor (sem trunk-based) / agente (nome) | O link vai na entrega e o professor precisa abrir; as partes ficam em pastas separadas (`firmware/`, `dashboard/`, `docs/`) | Fluxo trunk-based com PR e revisão do data.vigia |
 | D2 | Uso: monitor de temperatura da sala, aviso acima de 28 °C, LED como ventilador | equipe (documento da etapa 1) | Simples e cobre os quatro critérios | — |
-| D3 | Broker `broker.hivemq.com` (1883 TCP no ESP32, 8884 WSS `/mqtt` no navegador); `test.mosquitto.org` fica como troca só de configuração | agente | Em 28/10 o `test.mosquitto.org` falhou daqui em todas as tentativas (1883: `ETIMEDOUT`; 8081: `ECONNRESET`) e o próprio site diz que WebSocket e TLS são o que mais cai; o HiveMQ passou no teste completo (§5) | `test.mosquitto.org` como principal (escolha do documento); Mosquitto local (exige PC ligado e na mesma rede na apresentação) |
+| D3 | Broker `broker.hivemq.com` (1883 TCP no ESP32, 8884 WSS `/mqtt` no navegador); `test.mosquitto.org` fica como alternativa (troca o endereço no ESP32; endereço e porta 8081 no dashboard) | agente | Em 28/10 o `test.mosquitto.org` falhou daqui em todas as tentativas (1883: `ETIMEDOUT`; 8081: `ECONNRESET`) e o próprio site diz que WebSocket e TLS são o que mais cai; o HiveMQ passou no teste completo (§5) | `test.mosquitto.org` como principal (escolha do documento); Mosquitto local (exige PC ligado e na mesma rede na apresentação) |
 | D4 | ESP32 com `PubSubClient`: publica com QoS 0 e assina o comando com QoS 1; Last Will com QoS 1 e retain | agente | A `PubSubClient` só publica com QoS 0; o keep alive padrão de 15 s é o do material de aula. O documento pedia QoS 1 nas publicações do ESP32, o que essa biblioteca não faz | Outra biblioteca com publicação QoS 1 (mais uma dependência que nenhum R pede) |
 | D5 | Temperatura publicada como número puro (`26.4`); umidade fora | agente | Padrão de telemetria do material de aula ("payload contendo apenas a informação pura") e o tópico se chama `temperatura`; nenhum R pede umidade | JSON `{"temp":26.4,"umid":61}` do documento |
 | D6 | Dashboard mostra também, em texto, a conexão do próprio navegador com o broker | agente | Quando o broker cai, o Last Will não chega (quem publica é o broker) e o dashboard ficaria mostrando o último valor como se estivesse tudo bem; o teste de queda do broker (R11) precisa de algo para observar | Só o status do dispositivo |
@@ -101,7 +101,8 @@ Uma issue por tarefa (`#n` = número da issue). A semana vem do escopo.
 `#1 → #2 → #3 → #4 → #6 → #7 → #8`; `#1 → #5 → #6`; `{#4, #5} → #9`.
 
 Critério comum a toda issue: se alguém usou IA na tarefa, a linha está em `docs/registro-ia.md`
-com as sete colunas preenchidas (R7).
+(R7). As colunas que dependem da equipe (aceitamos, rejeitamos, mudamos) podem ficar para o #7,
+que fecha o registro sem nenhum "(preencher…)".
 
 ## 7. Contratos entre tarefas
 
@@ -109,8 +110,8 @@ com as sete colunas preenchidas (R7).
   `firmware/monitor_sala/config.example.h` e a constante equivalente no topo de
   `dashboard/index.html`.
 - Sketch em `firmware/monitor_sala/monitor_sala.ino` (a Arduino IDE exige pasta e arquivo com o
-  mesmo nome). O #2 expõe a leitura numa função que devolve a temperatura em °C ou `NAN` se o
-  sensor falhar; o #3 a usa.
+  mesmo nome). O #2 expõe `float lerTemperatura()`, que devolve a temperatura em °C ou `NAN` se o sensor
+  falhar; o #3 a usa e publica com 1 casa decimal (`String(t, 1)`).
 - Dashboard em um arquivo só, `dashboard/index.html`.
 
 ## 8. Pronto

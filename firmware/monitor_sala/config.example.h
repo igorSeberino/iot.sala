@@ -5,7 +5,7 @@
 #define WIFI_SSID   "NOME_DA_REDE"
 #define WIFI_SENHA  "SENHA_DA_REDE"
 
-// Broker público (README §2). Alternativa: "test.mosquitto.org", mesma porta.
+// Broker público (README §2). Alternativa: "test.mosquitto.org", mesma porta 1883.
 #define MQTT_HOST   "broker.hivemq.com"
 #define MQTT_PORTA  1883
 

@@ -34,7 +34,8 @@ mesmo tempo TCP (ESP32) e WebSocket seguro (navegador), e qualquer pessoa da equ
 casa. Em 28/10 testamos o `test.mosquitto.org` (o Mosquitto das aulas, hospedado) e ele não
 respondeu nem na 1883 nem na 8081; o próprio site avisa que WebSocket e TLS são o que mais fica
 fora do ar. O HiveMQ passou no mesmo teste: leitura, comando, retain e Last Will. Se o HiveMQ
-cair, o Mosquitto volta a ser opção só trocando o endereço na configuração. Como o broker é
+cair, o Mosquitto volta a ser opção trocando o endereço no ESP32 e o endereço e a porta (8081) no
+dashboard. Como o broker é
 público, usamos um prefixo de tópico próprio da equipe e não enviamos nenhum dado sensível.
 
 ## 3. Tópicos MQTT
@@ -44,7 +45,7 @@ com outros grupos no broker público).
 
 | Tópico | Quem publica → quem assina | Mensagem | QoS / retain |
 |---|---|---|---|
-| `…/sala/temperatura` | ESP32 → Dashboard | número em °C, a cada 5 s: `26.4` | 0 / não |
+| `…/sala/temperatura` | ESP32 → Dashboard | número em °C com 1 casa decimal, a cada 5 s: `26.4` | 0 / não |
 | `…/sala/ventilador/comando` | Dashboard → ESP32 | `ON` ou `OFF` | 1 / não |
 | `…/sala/ventilador/estado` | ESP32 → Dashboard | `LIGADO` ou `DESLIGADO` | 0 / sim |
 | `…/sala/status` | ESP32 (e o broker, pelo Last Will) → Dashboard | `online` ou `offline` | `online`: 0 / sim · `offline` (Last Will): 1 / sim |
@@ -78,8 +79,9 @@ com outros grupos no broker público).
 | ESP32 GPIO 2 | Resistor 220 Ω → LED (+, perna longa) | GPIO 2 também acende o LED azul da placa |
 | LED (−, perna curta) | ESP32 GND | |
 
-O GPIO 2 é pino de boot (strapping): precisa estar em nível baixo ou solto na energização. O LED
-com resistor para o GND mantém o pino em nível baixo, então a placa liga e grava normalmente.
+O GPIO 2 é pino de boot (strapping): precisa estar em nível baixo ou solto na energização. Ele
+já tem pull-down interno, e o LED com resistor para o GND não o puxa para alto, então a placa
+liga e grava normalmente.
 
 ## 6. Caminho de cada mensagem
 
