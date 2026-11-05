@@ -81,6 +81,11 @@ vocês precisam já foi visto nas aulas" (orientação, virou D4/D5) e "Um ritmo
 | HiveMQ público, ciclo completo | TCP 1883 + WSS 8884 `/mqtt`: status retido chegou, leitura chegou, comando QoS 1 chegou, estado publicado, Last Will `offline` (QoS 1) chegou ao derrubar o socket | sonda Node com dois clientes, mesmo prefixo de tópico com sufixo `-probe` |
 | `PubSubClient` | "It can only publish QoS 0 messages. It can subscribe at QoS 0 or QoS 1"; keep alive padrão 15 s | README de knolleary/pubsubclient |
 | Keep alive | broker detecta queda após 15 s × 1,5 = 22,5 s | material de aula, assunto 4 |
+| Firmware da etapa de 4/11 compila | ESP32 Dev Module, núcleo esp32 3.3.11, PubSubClient 2.8, DHT sensor library 1.4.7, Adafruit Unified Sensor 1.1.15: 68% da flash, nenhum aviso com `--warnings all` (04/11) | `arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all` |
+| HiveMQ público em 04/11 | TCP 1883: `online`, duas leituras (`26.4`, `26.5`) e Last Will `offline` (QoS 1) chegaram ao assinante | sonda Node (MQTT.js 5.16.1) imitando o ESP32, prefixo `…/sala-probe/`, retido limpo no fim |
+| Etapa de 4/11 no hardware | ESP32 no hotspot do iPhone (2,4 GHz) publicou `status = online` retido e a temperatura a cada 5 s; no MQTT Explorer a leitura foi de 23,0 a 26,7 °C segurando o sensor (04/11) | Monitor Serial + MQTT Explorer, prints em `docs/evidencias/` |
+| Rede CATOLICASC | Aberta com página de login, e o PC conectado nela em 5 GHz: o ESP32 não serve nela. Do PC, a porta 1883 deu `connack timeout` numa tentativa e conectou noutra; WSS 8884 funcionou | `netsh wlan show interfaces` e assinante MQTT.js, 04/11 |
+| DHT11 da equipe | Sensor solto de 4 pinos (sem plaquinha), usado com resistor de 10 kΩ de pull-up; o primeiro encaixe não fez contato e o sensor não respondia ao sinal de início | teste de captura no GPIO 4, 04/11 |
 
 ## 6. Tarefas
 

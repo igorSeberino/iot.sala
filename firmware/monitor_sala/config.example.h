@@ -2,6 +2,7 @@
 // Para usar: copie este arquivo para config.h (na mesma pasta) e preencha a rede Wi-Fi.
 // O config.h está no .gitignore e nunca vai para o repositório.
 
+// A rede precisa ser de 2,4 GHz: o ESP32 não conecta em 5 GHz.
 #define WIFI_SSID   "NOME_DA_REDE"
 #define WIFI_SENHA  "SENHA_DA_REDE"
 
