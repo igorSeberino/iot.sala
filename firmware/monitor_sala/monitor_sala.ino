@@ -2,7 +2,8 @@
 //
 // Etapa de 4/11 (issues #2 e #3): o ESP32 lê o DHT11 a cada 5 s e publica a temperatura no
 // broker MQTT, com status online/offline (Last Will) e reconexão sozinha do Wi-Fi e do broker.
-// O comando do LED (ventilador) entra na etapa de 11/11 (issue #4).
+// Etapa de 11/11 (issue #4): recebe o comando ON/OFF do dashboard, liga ou desliga o LED que
+// representa o ventilador e só depois confirma o estado real (LIGADO/DESLIGADO).
 //
 // Tópicos, QoS e retain: README §3. Ligação dos pinos: README §5.
 //
@@ -13,14 +14,17 @@
 #include <DHT.h>           // DHT sensor library, da Adafruit
 #include "config.h"        // Wi-Fi, broker e prefixo dos tópicos (fora do git)
 
-// ---------- Sensor (README §5) ----------
+// ---------- Sensor e atuador (README §5) ----------
 #define PINO_DHT 4
 #define TIPO_DHT DHT11
+#define PINO_LED 2  // LED que representa o ventilador (acende junto o LED azul da placa)
 
 // ---------- Tópicos (README §3) ----------
 // TOPICO_BASE vem do config.h; o compilador junta os dois textos num só.
 #define TOPICO_TEMPERATURA TOPICO_BASE "temperatura"
 #define TOPICO_STATUS      TOPICO_BASE "status"
+#define TOPICO_COMANDO     TOPICO_BASE "ventilador/comando"  // dashboard → ESP32: ON ou OFF
+#define TOPICO_ESTADO      TOPICO_BASE "ventilador/estado"   // ESP32 → dashboard: LIGADO ou DESLIGADO
 
 // ---------- Tempos ----------
 const unsigned long INTERVALO_LEITURA   = 5000;  // ms entre uma leitura e outra
@@ -40,6 +44,9 @@ unsigned long ultimaTentativaMqtt = 0;
 // Só servem para escrever no Serial quando a conexão cai ou volta (uma vez, não a cada volta).
 bool wifiEstavaConectado = false;
 bool mqttEstavaConectado = false;
+
+// Estado real do LED. A placa liga com ele apagado (D7 do plano).
+bool ventiladorLigado = false;
 
 // Lê o DHT11. Devolve a temperatura em °C ou NAN se o sensor não responder.
 float lerTemperatura() {
@@ -76,6 +83,37 @@ bool manterWifi() {
   return false;
 }
 
+// Publica o estado real do LED, retido: quem abrir o dashboard depois já recebe o último estado.
+void publicarEstado() {
+  mqtt.publish(TOPICO_ESTADO, ventiladorLigado ? "LIGADO" : "DESLIGADO", true);
+}
+
+// Chamada pelo mqtt.loop() quando chega uma mensagem num tópico assinado. O único tópico
+// assinado é o do comando, então aqui só chegam pedidos do dashboard.
+void aoReceberComando(char* topico, byte* conteudo, unsigned int tamanho) {
+  String comando = "";
+  for (unsigned int i = 0; i < tamanho; i++) {
+    comando += (char)conteudo[i];  // o conteúdo chega como bytes, sem o '\0' do fim
+  }
+  Serial.print("Comando recebido: ");
+  Serial.println(comando);
+
+  if (comando == "ON") {
+    ventiladorLigado = true;
+  } else if (comando == "OFF") {
+    ventiladorLigado = false;
+  } else {
+    Serial.println("Comando ignorado: só vale ON ou OFF.");
+    return;  // não mexe no LED nem no estado
+  }
+
+  // Primeiro muda o pino, depois confirma. Assim o dashboard só mostra LIGADO quando o LED
+  // de fato acendeu.
+  digitalWrite(PINO_LED, ventiladorLigado ? HIGH : LOW);
+  publicarEstado();
+  Serial.println(ventiladorLigado ? "Ventilador LIGADO." : "Ventilador DESLIGADO.");
+}
+
 // Client ID único no broker público: prefixo da equipe + MAC da placa, sem os dois-pontos.
 // Dois clientes com o mesmo ID derrubam um ao outro no broker.
 String idDoCliente() {
@@ -101,6 +139,11 @@ void conectarMqtt() {
     Serial.println("Broker conectado.");
     // Retido: quem abrir o dashboard ou o MQTT Explorer depois já recebe "online".
     mqtt.publish(TOPICO_STATUS, "online", true);
+    // A cada (re)conexão: publica o estado atual do LED e assina o comando de novo, porque a
+    // conexão nova começa sem nenhuma assinatura. QoS 1: o broker entrega o comando pelo menos
+    // uma vez. O comando não é retido, então um pedido antigo não é executado de novo aqui.
+    publicarEstado();
+    mqtt.subscribe(TOPICO_COMANDO, 1);
   } else {
     // mqtt.state(): -2 = não abriu a conexão TCP (broker fora do ar ou porta bloqueada),
     // -4 = o broker não respondeu a tempo. Lista completa no PubSubClient.h.
@@ -159,6 +202,9 @@ void setup() {
 
   dht.begin();
 
+  pinMode(PINO_LED, OUTPUT);
+  digitalWrite(PINO_LED, LOW);  // começa desligado
+
   WiFi.mode(WIFI_STA);  // só cliente de uma rede, sem criar ponto de acesso
   WiFi.begin(WIFI_SSID, WIFI_SENHA);
   ultimaTentativaWifi = millis();
@@ -167,6 +213,7 @@ void setup() {
   mqtt.setServer(MQTT_HOST, MQTT_PORTA);
   mqtt.setKeepAlive(KEEP_ALIVE_S);
   mqtt.setSocketTimeout(5);  // espera no máximo 5 s pela resposta do broker ao conectar
+  mqtt.setCallback(aoReceberComando);  // função chamada quando chega mensagem assinada
 }
 
 void loop() {

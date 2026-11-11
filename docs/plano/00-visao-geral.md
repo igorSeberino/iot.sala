@@ -86,6 +86,9 @@ vocês precisam já foi visto nas aulas" (orientação, virou D4/D5) e "Um ritmo
 | Etapa de 4/11 no hardware | ESP32 no hotspot do iPhone (2,4 GHz) publicou `status = online` retido e a temperatura a cada 5 s; no MQTT Explorer a leitura foi de 23,0 a 26,7 °C segurando o sensor (04/11) | Monitor Serial + MQTT Explorer, prints em `docs/evidencias/` |
 | Rede CATOLICASC | Aberta com página de login, e o PC conectado nela em 5 GHz: o ESP32 não serve nela. Do PC, a porta 1883 deu `connack timeout` numa tentativa e conectou noutra; WSS 8884 funcionou | `netsh wlan show interfaces` e assinante MQTT.js, 04/11 |
 | DHT11 da equipe | Sensor solto de 4 pinos (sem plaquinha), usado com resistor de 10 kΩ de pull-up; o primeiro encaixe não fez contato e o sensor não respondia ao sinal de início | teste de captura no GPIO 4, 04/11 |
+| Etapa de 11/11 no hardware | `ON` → `LIGADO`, `abc` ignorado, `OFF` → `DESLIGADO`; pelo dashboard, Ligar e Desligar mudam o LED e a confirmação aparece em ~0,6 s; botões publicam QoS 1 sem retain (11/11) | Monitor Serial, assinante MQTT.js, dashboard aberto com duplo clique; prints e fotos em `docs/evidencias/` |
+| Last Will na prática | Com a placa desligada da energia desde 04/11, o dashboard abriu em 11/11 mostrando "Dispositivo desconectado" (`offline` retido publicado pelo broker) | dashboard, 11/11 |
+| LED da equipe | Resistores disponíveis: 10 kΩ e 1 kΩ (sem 220 Ω); com 1 kΩ o LED acende bem visível. A ponte de GND da primeira montagem saiu: a perna curta foi direto para a fileira do GND | montagem, 11/11 |
 
 ## 6. Tarefas
 

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitor da Sala · N3 IoT</title>
+<!--
+  Dashboard da N3 (issue #5). Abre com duplo clique, sem servidor.
+  Mostra a temperatura, o aviso acima de 28 °C, o estado do ventilador (LED), o status do ESP32 e
+  a conexão do navegador com o broker, tudo em texto, e manda o comando Ligar/Desligar.
+  Tópicos, QoS e retain: README §3.
+-->
+<style>
+  :root {
+    --fundo: #f4f2ee;
+    --cartao: #ffffff;
+    --texto: #1d1d1f;
+    --suave: #6b6b70;
+    --borda: #e2dfd8;
+    --ok: #1f7a4d;
+    --ok-fundo: #e3f4ea;
+    --erro: #b42318;
+    --erro-fundo: #fde8e6;
+    --neutro-fundo: #eae7e0;
+    --botao: #1d1d1f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .subtitulo { color: var(--suave); margin: 0 0 20px; }
+
+  .conexoes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .selo {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 600;
+    background: var(--neutro-fundo);
+    color: var(--suave);
+  }
+  .selo.ok { background: var(--ok-fundo); color: var(--ok); }
+  .selo.erro { background: var(--erro-fundo); color: var(--erro); }
+
+  .cartoes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 16px; padding: 20px; }
+  .cartao h2 {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--suave);
+    margin: 0 0 12px;
+  }
+  .valor { font-size: 1.8rem; font-weight: 700; margin: 0; }
+  .detalhe { color: var(--suave); font-size: .9rem; margin: 10px 0 0; }
+  .aviso {
+    margin: 12px 0 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--erro-fundo);
+    color: var(--erro);
+    font-weight: 700;
+  }
+
+  .botoes { display: flex; gap: 8px; margin-top: 16px; }
+  button {
+    flex: 1;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    border: 1px solid var(--botao);
+    background: var(--botao);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.secundario { background: transparent; color: var(--botao); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Monitor de Temperatura da Sala</h1>
+  <p class="subtitulo">N3 de Internet das Coisas · ESP32 + MQTT (HiveMQ)</p>
+
+  <!-- Conexões em texto: a do navegador com o broker (D6) e a do ESP32 (status / Last Will) -->
+  <div class="conexoes">
+    <span id="broker" class="selo">Broker: conectando…</span>
+    <span id="dispositivo" class="selo">Dispositivo: aguardando…</span>
+  </div>
+
+  <div class="cartoes">
+    <section class="cartao">
+      <h2>Leitura do sensor</h2>
+      <p id="temperatura" class="valor">Temperatura: --</p>
+      <p id="aviso" class="aviso" hidden>ACIMA DO LIMITE de 28 °C</p>
+      <p id="hora-leitura" class="detalhe">Aguardando a primeira leitura…</p>
+    </section>
+
+    <section class="cartao">
+      <h2>Ventilador (LED)</h2>
+      <p id="ventilador" class="valor">Ventilador: --</p>
+      <div class="botoes">
+        <button id="ligar" disabled>Ligar</button>
+        <button id="desligar" class="secundario" disabled>Desligar</button>
+      </div>
+      <p id="ultimo-comando" class="detalhe">O texto só muda quando o ESP32 confirma.</p>
+    </section>
+  </div>
+</main>
+
+<!-- Biblioteca MQTT.js: cria a variável global "mqtt" usada abaixo -->
+<script src="https://unpkg.com/mqtt@5.16.1/dist/mqtt.min.js"></script>
+<script>
+// ---------- Configuração (README §2 e §3) ----------
+// O navegador não abre conexão TCP comum (porta 1883): usa MQTT sobre WebSocket seguro (8884).
+const BROKER_URL  = 'wss://broker.hivemq.com:8884/mqtt';
+const TOPICO_BASE = 'catolica/iot/n3-raig/sala/';
+const TOPICO_TEMPERATURA = TOPICO_BASE + 'temperatura';        // ESP32 → dashboard
+const TOPICO_STATUS      = TOPICO_BASE + 'status';             // ESP32 (ou o Last Will) → dashboard
+const TOPICO_ESTADO      = TOPICO_BASE + 'ventilador/estado';  // ESP32 → dashboard
+const TOPICO_COMANDO     = TOPICO_BASE + 'ventilador/comando'; // dashboard → ESP32
+const LIMITE = 28;  // °C: o aviso aparece acima disso (28,0 não conta)
+
+// Atalho para pegar um elemento da página pelo id.
+const $ = (id) => document.getElementById(id);
+
+// Troca o texto e a cor de um selo. A cor só reforça: a informação está no texto.
+function mostrarSelo(id, texto, tipo) {
+  $(id).textContent = texto;
+  $(id).className = 'selo ' + tipo;
+}
+
+// Liga ou desliga os dois botões juntos.
+function botoesAtivos(ativos) {
+  $('ligar').disabled = !ativos;
+  $('desligar').disabled = !ativos;
+}
+
+// Conecta ao broker. Se a conexão cair, o próprio MQTT.js tenta de novo a cada 5 s.
+const cliente = mqtt.connect(BROKER_URL, {
+  clientId: 'n3-raig-dashboard-' + Math.random().toString(16).slice(2, 8),  // único por aba
+  reconnectPeriod: 5000,
+  connectTimeout: 10000,
+});
+
+cliente.on('connect', () => {
+  mostrarSelo('broker', 'Broker: conectado', 'ok');
+  // Assina o que o ESP32 publica. Status e estado são retidos, então chegam logo ao conectar.
+  cliente.subscribe([TOPICO_TEMPERATURA, TOPICO_STATUS, TOPICO_ESTADO], { qos: 1 });
+  botoesAtivos(true);
+});
+
+// Sem broker os botões não têm como mandar nada e a tela para de atualizar.
+cliente.on('offline', () => {
+  mostrarSelo('broker', 'Broker: desconectado', 'erro');
+  botoesAtivos(false);
+});
+cliente.on('reconnect', () => {
+  mostrarSelo('broker', 'Broker: desconectado, tentando de novo…', 'erro');
+  botoesAtivos(false);
+});
+cliente.on('error', (erro) => console.log('Erro MQTT:', erro.message));
+
+// Toda mensagem dos tópicos assinados chega aqui. O conteúdo vem em bytes; toString() vira texto.
+cliente.on('message', (topico, conteudo) => {
+  const texto = conteudo.toString();
+  if (topico === TOPICO_TEMPERATURA) mostrarTemperatura(texto);
+  if (topico === TOPICO_STATUS)      mostrarDispositivo(texto);
+  if (topico === TOPICO_ESTADO)      mostrarVentilador(texto);
+});
+
+function mostrarTemperatura(texto) {
+  const t = parseFloat(texto);  // "26.4" → 26.4
+  if (isNaN(t)) return;         // ignora o que não for número
+  // Com vírgula, como no português: 26.4 → "26,4"
+  const comVirgula = t.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  $('temperatura').textContent = 'Temperatura: ' + comVirgula + ' °C';
+  $('aviso').hidden = !(t > LIMITE);
+  $('hora-leitura').textContent = 'Última leitura às ' + new Date().toLocaleTimeString('pt-BR');
+}
+
+function mostrarDispositivo(texto) {
+  if (texto === 'online')  mostrarSelo('dispositivo', 'Dispositivo: online', 'ok');
+  if (texto === 'offline') mostrarSelo('dispositivo', 'Dispositivo desconectado', 'erro');
+}
+
+// O texto do ventilador só muda aqui, com a confirmação do ESP32, nunca no clique do botão.
+function mostrarVentilador(texto) {
+  if (texto === 'LIGADO' || texto === 'DESLIGADO') {
+    $('ventilador').textContent = 'Ventilador: ' + texto;
+    $('ultimo-comando').textContent = 'Estado confirmado pelo ESP32 às ' + new Date().toLocaleTimeString('pt-BR') + '.';
+  }
+}
+
+// Publica o comando com QoS 1 (o broker entrega pelo menos uma vez) e sem retain (um comando
+// antigo não pode ser executado de novo quando o ESP32 reconectar).
+function enviarComando(comando) {
+  cliente.publish(TOPICO_COMANDO, comando, { qos: 1, retain: false });
+  $('ultimo-comando').textContent =
+    'Comando ' + comando + ' enviado às ' + new Date().toLocaleTimeString('pt-BR') + '. Aguardando o ESP32 confirmar…';
+}
+$('ligar').addEventListener('click', () => enviarComando('ON'));
+$('desligar').addEventListener('click', () => enviarComando('OFF'));
+</script>
+</body>
+</html>

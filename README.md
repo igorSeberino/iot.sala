@@ -77,7 +77,7 @@ com outros grupos no broker público).
 | DHT11 pino 2 (DATA) | ESP32 GPIO 4 | Resistor de 10 kΩ entre o DATA e o 3V3 (pull-up). O módulo de 3 pinos, numa plaquinha, já vem com ele |
 | DHT11 pino 3 | — | Não é ligado |
 | DHT11 pino 4 (GND) | ESP32 GND | |
-| ESP32 GPIO 2 | Resistor 220 Ω → LED (+, perna longa) | GPIO 2 também acende o LED azul da placa |
+| ESP32 GPIO 2 | Resistor de 220 Ω a 1 kΩ → LED (+, perna longa) | Usamos 1 kΩ. GPIO 2 também acende o LED azul da placa |
 | LED (−, perna curta) | ESP32 GND | |
 
 Pinos do DHT11 solto contados com a **grade virada para você e as pernas para baixo**, da
@@ -91,10 +91,13 @@ fileiras 1 a 15, com a antena para a fileira 1; os fios saem da coluna j, que fi
 | DHT11 (costas lisas para o lado dos fios) | f31 (VCC), f32 (DATA), f33, f34 (GND) |
 | Resistor 10 kΩ (pull-up) | h31 e h32 |
 | Fio 3V3 / D4 / GND | j15 → j31 · j11 → j32 · j14 → j34 |
-| Ponte de GND para o LED | i34 → i38 |
-| LED | perna curta h38, perna longa h39 |
-| Resistor do LED | i39 e i42 |
-| Fio D2 | j12 → j42 |
+| LED (direto na fileira do GND, sem ponte) | perna curta h34, perna longa h35 |
+| Resistor do LED (1 kΩ) | i35 e i38 |
+| Fio D2 | j12 → j38 |
+
+O caminho do LED fecha assim: D2 → fio (fileira 38) → resistor → perna longa (35) → LED → perna
+curta (34) → fio do GND. Se o LED não acender com o LED azul da placa aceso, ele está ao
+contrário ou alguma perna está fora da fileira.
 
 O GPIO 2 é pino de boot (strapping): precisa estar em nível baixo ou solto na energização. Ele
 já tem pull-down interno, e o LED com resistor para o GND não o puxa para alto, então a placa
@@ -187,3 +190,39 @@ temperatura chegando a cada 5 s; segurando o sensor, ela subiu de 23,0 para 26,7
 ![MQTT Explorer com status online e temperatura 23.0](docs/evidencias/etapa2-mqtt-explorer-online.png)
 
 ![MQTT Explorer com a temperatura subindo de 23 para 26,7 °C ao segurar o sensor](docs/evidencias/etapa2-mqtt-explorer-temperatura-subindo.png)
+
+## 9. Etapa de 11/11: comando do LED e dashboard
+
+- Firmware ([`monitor_sala.ino`](firmware/monitor_sala/monitor_sala.ino), issue #4): assina
+  `…/ventilador/comando` (QoS 1) a cada conexão; `ON` acende o LED e só depois publica `LIGADO`
+  retido em `…/ventilador/estado`; `OFF` apaga e publica `DESLIGADO`; qualquer outra mensagem é
+  ignorada. A placa liga com o LED apagado.
+- Dashboard ([`dashboard/index.html`](dashboard/index.html), issue #5): um arquivo só, conecta em
+  `wss://broker.hivemq.com:8884/mqtt` e mostra em texto a temperatura, o aviso **ACIMA DO
+  LIMITE** (acima de 28 °C), o ventilador, o dispositivo e o broker. Os botões publicam `ON` e
+  `OFF` com QoS 1 e sem retain.
+
+**Como usar**
+
+1. Gravar o firmware (§8) e ligar o ESP32 com o LED montado (§5).
+2. Abrir `dashboard/index.html` com **duplo clique** (não precisa de servidor) e esperar
+   "Broker: conectado" e "Dispositivo: online". Na rede da faculdade pode levar uns 10 s.
+3. Clicar em **Ligar**: o LED acende e a tela mostra "Ventilador: LIGADO" só depois que o ESP32
+   confirma. **Desligar** faz o contrário.
+
+| Teste em 11/11 | Resultado |
+|---|---|
+| `ON`, `abc` e `OFF` publicados no comando por um cliente MQTT | `LIGADO`; ignorado (`Comando ignorado: só vale ON ou OFF.`); `DESLIGADO` |
+| Dashboard recebendo `26.4`, `28.1` e `28` (mensagens de teste sem retain) | "Temperatura: 26,4 °C"; aviso ACIMA DO LIMITE; sem aviso |
+| Clique sem ESP32 para confirmar | o texto do ventilador não muda |
+| Botões do dashboard | `ON`/`OFF` chegam ao broker com QoS 1 e retain = false |
+| Ligar e Desligar com a placa | LED acende e apaga; confirmação na tela em ~0,6 s |
+| Status ao abrir o dashboard com a placa desligada da energia | "Dispositivo desconectado" (Last Will retido pelo broker) |
+
+![Dashboard com Ventilador LIGADO](docs/evidencias/etapa3-dashboard-ligado.png)
+
+![LED aceso na protoboard com o dashboard mostrando LIGADO](docs/evidencias/etapa3-led-ligado.jpg)
+
+![Dashboard com Ventilador DESLIGADO](docs/evidencias/etapa3-dashboard-desligado.png)
+
+![LED apagado na protoboard com o dashboard mostrando DESLIGADO](docs/evidencias/etapa3-led-desligado.jpg)
